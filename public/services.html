@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Management</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+      }
+      .card {
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      .card:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-4">
+    <header class="mb-8">
+      <nav
+        class="flex justify-between items-center bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-lg shadow-lg"
+      >
+        <h1 class="text-4xl font-bold">BYD CARS</h1>
+
+        <div>
+          <a href="/" class="ml-4 hover:underline">Home</a>
+          <a href="/customers.html" class="ml-4 hover:underline">Customers</a>
+          <a href="/employees.html" class="ml-4 hover:underline">Employees</a>
+
+          <a href="/services.html" class="ml-4 hover:underline">Services</a>
+          <a href="/orders.html" class="ml-4 hover:underline">Orders</a>
+          <button
+            href="/orders.html"
+            class="ml-4 bg-red-500 p-3 rounded-xl duration-300 hover:bg-red-700 logout"
+          >
+            Logout
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container mx-auto">
+      <div
+        id="service-list"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+      ></div>
+
+      <!-- Add Service Form -->
+      <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Add New Service</h2>
+        <form
+          id="add-service-form"
+          class="bg-white p-6 rounded-lg shadow-lg space-y-4"
+        >
+          <div class="flex flex-col">
+            <label for="name" class="font-medium">Service Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+              required
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="description" class="font-medium">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+              required
+            ></textarea>
+          </div>
+          <div class="flex flex-col">
+            <label for="price" class="font-medium">Price</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+              step="0.01"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Add Service
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchServices();
+
+        const form = document.getElementById("add-service-form");
+        form.addEventListener("submit", handleFormSubmit);
+
+        async function fetchServices() {
+          try {
+            const response = await fetch("/api/services");
+            if (response.ok) {
+              const services = await response.json();
+              displayServices(services);
+            } else {
+              console.error("Failed to fetch services");
+            }
+          } catch (error) {
+            console.error("Error fetching services:", error);
+          }
+        }
+
+        function displayServices(services) {
+          const serviceList = document.getElementById("service-list");
+          serviceList.innerHTML = "";
+
+          services.forEach((service) => {
+            const serviceItem = document.createElement("div");
+            serviceItem.className =
+              "card p-6 bg-white rounded-lg shadow-lg space-y-4";
+            serviceItem.innerHTML = `
+              <h3 class="text-xl font-bold text-gray-800"> №${service.service_id} ${service.name}</h3>
+              <p class="text-gray-600">${service.description}</p>
+              <p class="text-gray-600">Price: $${service.price}</p>
+              <button class="py-2 px-4 bg-red-500 text-white rounded mt-2" data-id="${service.service_id}">Delete</button>
+            `;
+            serviceList.appendChild(serviceItem);
+          });
+
+          // Attach event listeners to delete buttons
+          document.querySelectorAll("button[data-id]").forEach((button) => {
+            button.addEventListener("click", () =>
+              deleteService(button.dataset.id)
+            );
+          });
+        }
+
+        async function handleFormSubmit(event) {
+          event.preventDefault();
+
+          const name = document.getElementById("name").value;
+          const description = document.getElementById("description").value;
+          const price = document.getElementById("price").value;
+
+          try {
+            const response = await fetch("/api/services", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name, description, price }),
+            });
+            if (response.ok) {
+              fetchServices(); // Refresh the services list
+            } else {
+              console.error("Failed to add service");
+            }
+          } catch (error) {
+            console.error("Error adding service:", error);
+          }
+        }
+
+        async function deleteService(id) {
+          try {
+            const response = await fetch(`/api/services/${id}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              fetchServices(); // Refresh the list after deletion
+            } else {
+              console.error("Failed to delete service");
+            }
+          } catch (error) {
+            console.error("Error deleting service:", error);
+          }
+        }
+      });
+    </script>
+    <script src="./script.js"></script>
+  </body>
+</html>

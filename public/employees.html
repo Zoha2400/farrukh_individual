@@ -1,0 +1,208 @@
+<!-- public/employees.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Management</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+      }
+      .card {
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      .card:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-4">
+    <header class="mb-8">
+      <nav
+        class="flex justify-between items-center bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-lg shadow-lg"
+      >
+        <h1 class="text-4xl font-bold">BYD CARS</h1>
+
+        <div>
+          <a href="/" class="ml-4 hover:underline">Home</a>
+          <a href="/customers.html" class="ml-4 hover:underline">Customers</a>
+          <a href="/employees.html" class="ml-4 hover:underline">Employees</a>
+
+          <a href="/services.html" class="ml-4 hover:underline">Services</a>
+          <a href="/orders.html" class="ml-4 hover:underline">Orders</a>
+          <button
+            href="/orders.html"
+            class="ml-4 bg-red-500 p-3 rounded-xl duration-300 hover:bg-red-700 logout"
+          >
+            Logout
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container mx-auto">
+      <div
+        id="employee-list"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+      ></div>
+
+      <!-- Add Employee Form -->
+      <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-4">Add New Employee</h2>
+        <form id="add-employee-form" class="space-y-4">
+          <div class="flex flex-col">
+            <label for="first_name" class="font-medium">First Name</label>
+            <input
+              type="text"
+              id="first_name"
+              class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="last_name" class="font-medium">Last Name</label>
+            <input
+              type="text"
+              id="last_name"
+              class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="position" class="font-medium">Position</label>
+            <input
+              type="text"
+              id="position"
+              class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="salary" class="font-medium">Salary</label>
+            <input
+              type="number"
+              id="salary"
+              class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              step="0.01"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="hire_date" class="font-medium">Hire Date</label>
+            <input
+              type="date"
+              id="hire_date"
+              class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            Add Employee
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchEmployees();
+        const form = document.getElementById("add-employee-form");
+        form.addEventListener("submit", handleFormSubmit);
+
+        async function fetchEmployees() {
+          try {
+            const response = await fetch("/api/employees");
+            if (response.ok) {
+              const employees = await response.json();
+              displayEmployees(employees);
+            } else {
+              console.error("Failed to fetch employees");
+            }
+          } catch (error) {
+            console.error("Error fetching employees:", error);
+          }
+        }
+
+        function displayEmployees(employees) {
+          const employeeList = document.getElementById("employee-list");
+          employeeList.innerHTML = ""; // Clear any existing data
+
+          employees.forEach((employee) => {
+            const employeeItem = document.createElement("div");
+            employeeItem.className =
+              "p-4 bg-white rounded-lg shadow-md space-y-2 card-hover";
+            employeeItem.innerHTML = `
+          <h2 class="text-xl font-semibold">№${employee.employee_id} ${employee.first_name} ${employee.last_name}</h2>
+          <p class="text-gray-700">Position: ${employee.position}</p>
+          <p class="text-gray-700">Salary: $${employee.salary}</p>
+          <p class="text-gray-700">Hire Date: ${employee.hire_date}</p>
+          <button class="py-1 px-4 bg-red-500 text-white rounded hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" data-id="${employee.employee_id}">Delete</button>
+        `;
+            employeeList.appendChild(employeeItem);
+          });
+
+          // Attach event listeners to delete buttons
+          document.querySelectorAll("button[data-id]").forEach((button) => {
+            button.addEventListener("click", () =>
+              deleteEmployee(button.dataset.id)
+            );
+          });
+        }
+
+        async function handleFormSubmit(event) {
+          event.preventDefault();
+
+          const first_name = document.getElementById("first_name").value;
+          const last_name = document.getElementById("last_name").value;
+          const position = document.getElementById("position").value;
+          const salary = document.getElementById("salary").value;
+          const hire_date = document.getElementById("hire_date").value;
+
+          try {
+            const response = await fetch("/api/employees", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                first_name,
+                last_name,
+                position,
+                salary,
+                hire_date,
+              }),
+            });
+            if (response.ok) {
+              fetchEmployees(); // Refresh employee list
+            } else {
+              console.error("Failed to add employee");
+            }
+          } catch (error) {
+            console.error("Error adding employee:", error);
+          }
+        }
+
+        async function deleteEmployee(id) {
+          try {
+            const response = await fetch(`/api/employees/${id}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              fetchEmployees(); // Refresh the list after deletion
+            } else {
+              console.error("Failed to delete employee");
+            }
+          } catch (error) {
+            console.error("Error deleting employee:", error);
+          }
+        }
+      });
+    </script>
+    <script src="./script.js"></script>
+  </body>
+</html>

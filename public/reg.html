@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Регистрация</title>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white w-96 shadow-md rounded px-8 pt-6 pb-4 mb-4">
+      <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+        Регистрация
+      </h1>
+      <form id="registrationForm" class="space-y-4">
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="name"
+            >Имя</label
+          >
+          <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="Введите ваше имя"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="email"
+            >Email</label
+          >
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Введите ваш email"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div>
+          <label
+            class="block text-gray-700 text-sm font-bold mb-2"
+            for="password"
+            >Пароль</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Введите пароль"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div class="flex flex-col items-center justify-between">
+          <button
+            type="submit"
+            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Зарегистрироваться
+          </button>
+          <a class="text-blue-400 mt-2" href="/login.html">Войти</a>
+        </div>
+      </form>
+    </div>
+    <script>
+      document
+        .getElementById("registrationForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("name").value;
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          try {
+            const response = await fetch("/reg", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, email, password }),
+            });
+            const data = await response.json();
+            alert(data.success || data.error);
+            window.location.href = "/";
+          } catch (err) {
+            console.error("Error:", err);
+            alert("Произошла ошибка при регистрации");
+          }
+        });
+    </script>
+  </body>
+</html>

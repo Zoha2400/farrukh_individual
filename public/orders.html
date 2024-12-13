@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orders</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+      }
+      .card {
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      .card:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-4">
+    <header class="mb-8">
+      <nav
+        class="flex justify-between items-center bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-lg shadow-lg"
+      >
+        <h1 class="text-4xl font-bold">BYD CARS</h1>
+
+        <div>
+          <a href="/" class="ml-4 hover:underline">Home</a>
+          <a href="/customers.html" class="ml-4 hover:underline">Customers</a>
+          <a href="/employees.html" class="ml-4 hover:underline">Employees</a>
+          <a href="/services.html" class="ml-4 hover:underline">Services</a>
+          <a href="/orders.html" class="ml-4 hover:underline">Orders</a>
+          <button
+            href="/orders.html"
+            class="ml-4 bg-red-500 p-3 rounded-xl duration-300 hover:bg-red-700 logout"
+          >
+            Logout
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container mx-auto">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Order List</h2>
+      <div
+        id="order-list"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5"
+      ></div>
+      <h2 class="text-2xl font-bold text-gray-800 mt-5 mb-6">Add Order</h2>
+      <form
+        id="add-order-form"
+        class="bg-white p-6 rounded-lg shadow-lg space-y-4"
+      >
+        <div class="flex flex-col">
+          <label for="customer_id" class="font-medium">Customer ID</label>
+          <input
+            type="number"
+            id="customer_id"
+            class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="car_id" class="font-medium">Car ID</label>
+          <input
+            type="number"
+            id="car_id"
+            class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="employee_id" class="font-medium">Employee ID</label>
+          <input
+            type="number"
+            id="employee_id"
+            class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="total_price" class="font-medium">Total Price</label>
+          <input
+            type="number"
+            id="total_price"
+            class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+            step="0.01"
+          />
+        </div>
+        <div class="flex flex-col">
+          <label for="status" class="font-medium">Status</label>
+          <select
+            id="status"
+            class="p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
+          >
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <button
+          type="submit"
+          class="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        >
+          Add Order
+        </button>
+      </form>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchOrders();
+
+        const form = document.getElementById("add-order-form");
+        form.addEventListener("submit", handleFormSubmit);
+
+        async function fetchOrders() {
+          try {
+            const response = await fetch("/api/orders");
+            if (response.ok) {
+              const orders = await response.json();
+              displayOrders(orders);
+            } else {
+              console.error("Failed to fetch orders");
+            }
+          } catch (error) {
+            console.error("Error fetching orders:", error);
+          }
+        }
+
+        function displayOrders(orders) {
+          const orderList = document.getElementById("order-list");
+          orderList.innerHTML = "";
+
+          orders.forEach((order) => {
+            const orderItem = document.createElement("div");
+            orderItem.classList.add(
+              "card",
+              "p-6",
+              "bg-white",
+              "rounded-lg",
+              "shadow-lg",
+              "space-y-4"
+            );
+            orderItem.innerHTML = `
+              <h2 class="text-2xl font-bold text-gray-800">Order ID: ${order.order_id}</h2>
+              <p class="text-gray-600">Customer ID: ${order.customer_id}</p>
+              <p class="text-gray-600">Car ID: ${order.car_id}</p>
+              <p class="text-gray-600">Employee ID: ${order.employee_id}</p>
+              <p class="text-gray-600">Total Price: $${order.total_price}</p>
+              <p class="text-gray-600">Status: ${order.status}</p>
+              <button class="py-2 px-4 bg-red-500 text-white rounded mt-2" data-id="${order.order_id}">Delete</button>
+            `;
+            orderList.appendChild(orderItem);
+          });
+
+          // Attach event listeners to delete buttons
+          document.querySelectorAll("button[data-id]").forEach((button) => {
+            button.addEventListener("click", () =>
+              deleteOrder(button.dataset.id)
+            );
+          });
+        }
+
+        async function handleFormSubmit(event) {
+          event.preventDefault();
+
+          const customer_id = document.getElementById("customer_id").value;
+          const car_id = document.getElementById("car_id").value;
+          const employee_id = document.getElementById("employee_id").value;
+          const total_price = document.getElementById("total_price").value;
+          const status = document.getElementById("status").value;
+
+          try {
+            const response = await fetch("/api/orders", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                customer_id,
+                car_id,
+                employee_id,
+                total_price,
+                status,
+              }),
+            });
+            if (response.ok) {
+              fetchOrders(); // Refresh the orders list
+            } else {
+              console.error("Failed to add order");
+            }
+          } catch (error) {
+            console.error("Error adding order:", error);
+          }
+        }
+
+        async function deleteOrder(id) {
+          try {
+            const response = await fetch(`/api/orders/${id}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              fetchOrders(); // Refresh the list after deletion
+            } else {
+              console.error("Failed to delete order");
+            }
+          } catch (error) {
+            console.error("Error deleting order:", error);
+          }
+        }
+      });
+    </script>
+    <script src="./script.js"></script>
+  </body>
+</html>
